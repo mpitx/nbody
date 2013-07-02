@@ -12,6 +12,8 @@ RANK = COMM.Get_rank()
 
 if __name__ == '__main__':
     if RANK == 0:
+        import pdb
+        pdb.set_trace()
         master.main(sys.argv[1:], SIZE - 1) # SIZE - master
     else:
         slave.main(RANK)

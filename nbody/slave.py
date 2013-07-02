@@ -5,6 +5,7 @@ import sys
 import math
 import numpy as np
 import pycuda.driver as cuda
+from mpi4py import MPI
 import nbody
 import nbody.mesh as mesh
 import nbody.kernels as kernels
@@ -12,30 +13,21 @@ import nbody.kernels as kernels
 G = 6.67e-11
 EPS = 3E4
 dt = 0.1
+COMM = MPI.COMM_WORLD
+RANK = COMM.Get_rank()
 
-def simulation(rx, ry, vx, vy, fx, fy, m, radius, steps=1):
-    '''Do one time step in simulation
-
-    All arrays _must_ be of the same size
-
-    :param rx: numpy array of x positions
-    :param ry: numpy array of y positions
-    :param vx: numpy array of x velocities
-    :param vy: numpy array of y velocities
-    :param fx: numpy array of x forces
-    :param fy: numpy array of y forces
-    :param m:  numpy array of masses
-    :param radius: radius of space
-    :param steps: Number of time steps simulation should complete
-    '''
-    assert len(rx) == len(ry) \
-        == len(vx) == len(vy) \
-        == len(fx) == len(fy) \
-        == len(m)
-    for i in range(steps):
-        simulation_step(rx, ry, vx, vy, fx, fy, m, radius)
-
-def simulation_step(rx, ry, vx, vy, fx, fy, m, radius):
+def compute(grids):
+    N, R, rx, ry, vx, vy, fx, fy, m = nbody.open_galaxy()
+    for grid in grids:
+        compute_grid(rx[grid],
+                     ry[grid],
+                     vx[grid],
+                     vy[grid],
+                     fx[grid],
+                     fy[grid],
+                     m[grid],
+                     R)
+def compute_grid(rx, ry, vx, vy, fx, fy, m, radius):
     '''Do one time step in simulation
 
     :param rx: numpy array of x positions
@@ -121,10 +113,11 @@ def simulation_step(rx, ry, vx, vy, fx, fy, m, radius):
     mesh_64, grid_spread = create_mesh(radius, rx, ry)
     compute_mesh(grid_spread)
 
-def main(args):
-    assert len(args) >= 1
-    N, R, rx, ry, vx, vy, fx, fy, m, c = nbody.read_galaxy(filename=args[0])
-    simulation(rx, ry, vx, vy, fx, fy, m, R)
+def main(rank):
+    grids = np.empty((1, 1000))
+    grids = COMM.recv(source=0, tag=rank)
+    compute(grids)
+    COMM.Barrier()
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    pass
