@@ -24,6 +24,6 @@ def create_grids(n, r):
     l = 4 * r / n
     x = list(x for x in range(int(n / 2)))
     y = list(y for y in range(int(n / 2)))
-    for j in list(y):
-        for i in list(x):
+    for j in y:
+        for i in x:
             yield (-r + l * i, r - l * j, l, l / 2)
