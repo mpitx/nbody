@@ -39,8 +39,12 @@ def compute_grid(rx, ry, vx, vy, fx, fy, m, radius):
     :param m:  numpy array of masses
     :param radius: Radius of space
     '''
-    def create_mesh(radius, rx, ry):
-        mesh_64 = mesh.create_grids(16, radius) # returns 64 grids
+    def create_mesh(radius, rx, ry, grid=None):
+        # returns 64 grids
+        mesh_64 = list(mesh.create_grids(16,
+                                         radius,
+                                         x_offset=grid[0] if grid else 0,
+                                         y_offset=grid[1] if grid else 0))
         grid_spread = list(list(x) for x in
                            (mesh.get_particles_in_grid((rx, ry), y)
                            for y in mesh_64))
@@ -56,7 +60,7 @@ def compute_grid(rx, ry, vx, vy, fx, fy, m, radius):
         add(rx, vx, fx, m, block=block)
         add(ry, vy, fy, m, block=block)
         step(rx, ry, vx, vy, fx, fy, m, block=block)
-    def kernel_mesh(grids):
+    def kernel_mesh(grids, grid_spread):
         grids_rx = np.array(list(x[0] for x in grids))
         grids_ry = np.array(list(x[1] for x in grids))
         grids_vx = np.zeros_like(grids_rx)
@@ -86,14 +90,15 @@ def compute_grid(rx, ry, vx, vy, fx, fy, m, radius):
                  cuda.In(np.ones_like(rx[grid]) * grids_fy[i]),
                  cuda.In(m[grid]), block=block)
 
-    def compute_mesh(grid_spread):
+    def compute_mesh(mesh, grid_spread):
         grids = []
         for i, grid in enumerate(grid_spread):
             if len(grid) > 200000:
-                sub_mesh, sub_grid_spread = mesh.create_grids(grid[3],
-                                                              rx[grid],
-                                                              ry[grid])
-                compute_mesh(sub_grid_spread)
+                sub_mesh, sub_grid_spread = create_mesh(mesh[i][3],
+                                                        rx[grid],
+                                                        ry[grid],
+                                                        grid=mesh[i])
+                compute_mesh(sub_mesh, sub_grid_spread)
             total_mass = sum(m[grid])
             if total_mass == 0:
                 continue
@@ -108,10 +113,10 @@ def compute_grid(rx, ry, vx, vy, fx, fy, m, radius):
             center_x = sum(m[grid] * rx[grid]) / total_mass
             center_y = sum(m[grid] * ry[grid]) / total_mass
             grids.append((center_x, center_y, total_mass, i))
-        kernel_mesh(grids)
+        kernel_mesh(grids, grid_spread)
 
     mesh_64, grid_spread = create_mesh(radius, rx, ry)
-    compute_mesh(grid_spread)
+    compute_mesh(mesh_64, grid_spread)
 
 def main(rank):
     grids = np.empty((1, 1000))
