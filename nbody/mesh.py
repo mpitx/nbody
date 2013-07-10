@@ -18,7 +18,7 @@ def create_grids(n, r):
     '''Create a list (generator) of grids given the count and radius
 
 
-    :param n: number of grids to create
+    :param n: number of grids to create divided by 4. n * 4 = grid count
     :param r: radius of the mesh
     '''
     l = 4 * r / n
