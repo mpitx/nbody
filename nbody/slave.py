@@ -16,17 +16,16 @@ dt = 0.1
 COMM = MPI.COMM_WORLD
 RANK = COMM.Get_rank()
 
-def compute(grids):
+def compute(particles):
     N, R, rx, ry, vx, vy, fx, fy, m = nbody.open_galaxy()
-    for grid in grids:
-        compute_grid(rx[grid],
-                     ry[grid],
-                     vx[grid],
-                     vy[grid],
-                     fx[grid],
-                     fy[grid],
-                     m[grid],
-                     R)
+    compute_grid(rx[particles],
+                 ry[particles],
+                 vx[particles],
+                 vy[particles],
+                 fx[particles],
+                 fy[particles],
+                  m[particles],
+                  R)
 def compute_grid(rx, ry, vx, vy, fx, fy, m, radius):
     '''Do one time step in simulation
 
@@ -119,9 +118,10 @@ def compute_grid(rx, ry, vx, vy, fx, fy, m, radius):
     compute_mesh(mesh_64, grid_spread)
 
 def main(rank):
-    grids = np.empty((1, 1000))
-    grids = COMM.recv(source=0, tag=rank)
-    compute(grids)
+    particle_count = COMM.recv(source=0, tag=0)
+    particles = np.zeros(particle_count, dtype=np.int32)
+    COMM.Recv(particles, source=0, tag=rank)
+    compute(particles)
     COMM.Barrier()
 
 if __name__ == '__main__':

@@ -100,14 +100,15 @@ def simulation_step(rx, ry, vx, vy, fx, fy, m, radius, size):
         # 'round robin' assign
         while grids_left > 0:
             for i in range(size):
-                assigned_grids[i].append(grid_spread[grids[M-grids_left][3]])
+                assigned_grids[i].extend(grid_spread[grids[M-grids_left][3]])
                 grids_left = grids_left - 1
                 if grids_left <= 0:
                     break
         for i, grid in enumerate(assigned_grids):
             to_rank = 1 + i
-            np_grid = np.array(grid)
-            COMM.send(np_grid, dest=to_rank, tag=to_rank)
+            np_grid = np.array(grid, dtype=np.int32)
+            COMM.send(len(np_grid), dest=to_rank, tag=0)
+            COMM.Send(np_grid, dest=to_rank, tag=to_rank)
         COMM.Barrier()
         kernel_mesh(grids)
     mesh_64, grid_spread = create_mesh(radius, rx, ry)
