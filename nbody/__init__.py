@@ -68,39 +68,32 @@ def read_galaxy(filename='./galaxy3'):
     assert os.path.exists(filename)
     global __bodies
     R = 0
-    rx = []
-    ry = []
-    vx = []
-    vy = []
-    masses = []
     N = 0
     with open(filename, 'r') as f:
-        R = float(f.readline())
-        lines = f.readlines()
-        N = len(lines)
-        for line in lines:
-            line = line.strip()
-            props = line.split(' ')
-            rx.append(float(props[0]))
-            ry.append(float(props[1]))
-            vx.append(float(props[2]))
-            vy.append(float(props[3]))
-            masses.append(float(props[4]))
+        f.readline() # ignore first line
+        for i, line in enumerate(f):
+            pass
+        N = i + 1
     rx_mmap = np.memmap(__rx_file, dtype=np.float32, shape=(N,), mode='w+')
-    rx_mmap[:] = np.array(rx, dtype=np.float32)[:]
     ry_mmap = np.memmap(__ry_file, dtype=np.float32, shape=(N,), mode='w+')
-    ry_mmap[:] = np.array(ry, dtype=np.float32)[:]
     vx_mmap = np.memmap(__vx_file, dtype=np.float32, shape=(N,), mode='w+')
-    vx_mmap[:] = np.array(vx, dtype=np.float32)[:]
     vy_mmap = np.memmap(__vy_file, dtype=np.float32, shape=(N,), mode='w+')
-    vy_mmap[:] = np.array(vy, dtype=np.float32)[:]
+    fx_mmap = np.memmap(__fx_file, dtype=np.float32, shape=(N,), mode='w+')
+    fy_mmap = np.memmap(__fy_file, dtype=np.float32, shape=(N,), mode='w+')
     mass_mmap = np.memmap(__masses_file,
                             dtype=np.float32,
                             shape=(N,),
                             mode='w+')
-    mass_mmap[:] = np.array(masses, dtype=np.float32)[:]
-    fx_mmap = np.memmap(__fx_file, dtype=np.float32, shape=(N,), mode='w+')
-    fy_mmap = np.memmap(__fy_file, dtype=np.float32, shape=(N,), mode='w+')
+    with open(filename, 'r') as f:
+        R = float(f.readline())
+        for i, line in enumerate(f):
+            line = line.strip()
+            props = line.split(' ')
+            rx_mmap[i] = float(props[0])
+            ry_mmap[i] = float(props[1])
+            vx_mmap[i] = float(props[2])
+            vy_mmap[i] = float(props[3])
+            mass_mmap[i] = float(props[4])
     # Flush MemMaps for slave nodes
     rx_mmap.flush()
     ry_mmap.flush()
