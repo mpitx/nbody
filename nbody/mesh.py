@@ -4,15 +4,12 @@ import os
 import math
 import numpy as np
 
-def get_particles_in_grid_np(bodies, grid):
-    contains = lambda rx, ry, d: d[0] <= rx < d[0] + d[2] and \
-                                 d[1] <= ry < d[1] + d[2]
-    return (x for x in bodies if contains(x[0], x[1], grid))
-
 def get_particles_in_grid(r, grid):
-    contains = lambda r, d: d[0] <= r[0] < d[0] + d[2] and \
-                            d[1] <= r[1] < d[1] + d[2]
-    return (i for i in range(len(r[0])) if contains((r[0][i], r[1][i]), grid))
+    x = np.intersect1d(np.where(grid[0] <= r[0])[0],
+                       np.where(r[0] < grid[0] + grid[2])[0])
+    y = np.intersect1d(np.where(grid[1] <= r[1])[0],
+                       np.where(r[1] < grid[1] + grid[2])[0])
+    return np.intersect1d(x, y)
 
 def create_grids(n, r, x_offset=0, y_offset=0):
     '''Create a list (generator) of grids given the count and radius
