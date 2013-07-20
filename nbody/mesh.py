@@ -6,10 +6,12 @@ import numpy as np
 
 def get_particles_in_grid(r, grid):
     x = np.intersect1d(np.where(grid[0] <= r[0])[0],
-                       np.where(r[0] < grid[0] + grid[2])[0])
+                       np.where(r[0] < grid[0] + grid[2])[0],
+                       assume_unique=True)
     y = np.intersect1d(np.where(grid[1] <= r[1])[0],
-                       np.where(r[1] < grid[1] + grid[2])[0])
-    return np.intersect1d(x, y)
+                       np.where(r[1] < grid[1] + grid[2])[0],
+                       assume_unique=True)
+    return np.intersect1d(x, y, assume_unique=True)
 
 def create_grids(n, r, x_offset=0, y_offset=0):
     '''Create a list (generator) of grids given the count and radius
