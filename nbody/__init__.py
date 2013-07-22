@@ -24,7 +24,7 @@ class Bodies(object):
                 self.fx,
                 self.fy,
                 self.m,)
-__data_dir = os.environ['HOME']
+__data_dir = os.path.join(os.environ['HOME'], 'tmp', 'nbody', 'cudampi')
 __header = os.path.join(__data_dir, 'header')
 __rx_file = os.path.join(__data_dir, 'rx.npy')
 __ry_file = os.path.join(__data_dir, 'ry.npy')
